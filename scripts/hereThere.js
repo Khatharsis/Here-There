@@ -2,14 +2,28 @@
 function arrangeCanvas() {
 	// Using jQuery with Canvas isn't too straightfoward...
 	// http://stackoverflow.com/questions/3305167/simple-html5-canvas-and-jquery-question
-	var canvas = $('#app')[0];
+    var weatherObj = {},
+        timeObj = {};
+
+    var canvas = $('#app')[0],
+        ctx = null,
+        backgroundImage = new Image();
+
 	if (canvas.getContext) {
-		var ctx = canvas.getContext('2d');
+		ctx = canvas.getContext('2d');
 	    
-        var backgroundImage = new Image();
         backgroundImage.onload = function() {
+            // Loading...
             ctx.drawImage(backgroundImage, 0, 0);
-            getWeather(ctx);
+            printLoadingMessage(ctx);
+
+            // After fetching data
+            $.when(getWeather(weatherObj), getTime(timeObj))
+            .done(function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(backgroundImage, 0, 0);
+                printObjects(ctx, weatherObj, timeObj);
+            });
         };
         backgroundImage.src = 'images/tempWallpaper.jpg';
 	}
@@ -19,33 +33,41 @@ function arrangeCanvas() {
 // Guide: http://weblogs.asp.net/sreejukg/archive/2012/04/17/
 // 			display-weather-information-in-your-site-using-jquery-using-yahoo-services.aspx
 // In-browser YQL console: http://developer.yahoo.com/yql/console/
-function getWeather(ctx) {
-	var weatherObj = {};
+function getWeather(obj) {
+    var deferred = $.Deferred();
 	// LA: 2442047
 	// BKK: 1225448
 	var query = "http://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid in (1225448, 2442047)&format=json&callback=?";
 	$.getJSON(query, function (data) {
-		weatherObj.there_temp = data.query.results.channel[0].item.condition.temp;
-		
-		weatherObj.here_temp = data.query.results.channel[1].item.condition.temp;
-	
-        // Canvas isn't happy with multiple ajax calls, so chain
-        // the function calls...
-        getTime(ctx, weatherObj);
+		obj.there_temp = data.query.results.channel[0].item.condition.temp;
+		obj.here_temp = data.query.results.channel[1].item.condition.temp;
+
+        deferred.resolve();
 	});
+    return deferred.promise();
 }
 
 // Call custom PHP script to obtain time values
-function getTime(ctx, weatherObj) {
-    var timeObj = {};
+function getTime(obj) {
+    //var timeObj = {};
+    var deferred = $.Deferred();
 
     var query = "dateTimeJsonFormatter.php";
     $.getJSON(query, function (data) {
-        timeObj.here = data.currentTime.here;
-        timeObj.there = data.currentTime.there;
-        timeObj.days_left = data.daysLeft.remaining;
-        printObjects(ctx, weatherObj, timeObj);
+        obj.here = data.currentTime.here;
+        obj.there = data.currentTime.there;
+        obj.days_left = data.daysLeft.remaining;
+        
+        deferred.resolve();
     });
+    return deferred.promise();
+}
+
+// Print loading message
+function printLoadingMessage(ctx) {
+    ctx.font = "100px Arial";
+    ctx.fillStyle = "rgba(137, 215, 255, 0.5)";
+    ctx.fillText("Loading...", 100, 350);
 }
 
 // Print all of the objects and their data to the canvas
