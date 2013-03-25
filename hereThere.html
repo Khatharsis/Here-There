@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--HTML5 Boilerplate-->
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <![endif]-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Here/There</title>
+	<meta name="viewport" content="width=device-width">
+
+	<script src="scripts/modernizr-2.6.2.min.js"></script>
+	
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+		}
+		#wrapper {
+			margin: 0 auto;
+			width: 640px;
+			overflow: hidden;
+			position: relative;
+			border: 1px solid #000;
+			/*border-radius: 10px;*/
+			margin-top: 2px;
+		}
+		canvas {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+	<!--[if lt IE 7]>
+		<p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+	<![endif]-->
+
+	
+	<div id="wrapper">
+		<canvas id="app" width="640" height="1136">Your browser does not support canvas!</canvas>
+	</div>
+	
+	
+	
+<!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="scripts/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="scripts/hereThere.js"></script>
+
+<script type="text/javascript">
+/*(function() {
+	var w = window.innerWidth;
+	var h = window.innerHeight;
+	
+	if (window.navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/i) ) {
+		$('#app').height = h;
+		$('#app').width = w;
+		$('#container').style.height = h+"px";
+		$('#container').style.width = w+"px";
+	}
+})();*/
+
+
+$(document).ready(function() {
+	arrangeCanvas();
+});
+
+</script>
+
+</body>
+</html>
