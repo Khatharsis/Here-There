@@ -18,17 +18,15 @@
 			padding: 0;
 		}
 		#wrapper {
-			margin: 0 auto;
-			width: 640px;
-			overflow: hidden;
-			position: relative;
-			border: 1px solid #000;
-			/*border-radius: 10px;*/
-			margin-top: 2px;
+            margin: 0 auto;
+            margin-top: 2px;
+            width: 640px;
+            position: relative;
 		}
 		canvas {
-			display: block;
-		}
+            border: 1px solid #000;
+		    position: absolute;            
+        }
 	</style>
 </head>
 <body>
@@ -39,6 +37,7 @@
 	
 	<div id="wrapper">
 		<canvas id="app" width="640" height="1136">Your browser does not support canvas!</canvas>
+        <canvas id="app-text" width="640" height="1136"></canvas>
 	</div>
 	
 	
