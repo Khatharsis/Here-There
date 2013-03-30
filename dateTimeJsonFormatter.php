@@ -11,17 +11,19 @@
     // Only changes the hour offset; can be modified to adjust for
     // date changes as well, but irrelevant in this script.
     function adjustGmtDate($gmtDate, $timezoneOffset) {
-        $gmtDate["hours"] = $gmtDate["hours"] + $timezoneOffset;
-        if ($gmtDate["hours"] > 24) {
-            $gmtDate["hours"] = $gmtDate["hours"] - 24;
+        $gmtDate['hours'] = $gmtDate['hours'] + $timezoneOffset;
+        if ($gmtDate['hours'] > 24) {
+            $gmtDate['hours'] = $gmtDate['hours'] - 24;
         }
-        else if ($gmtDate["hours"] < 0) {
-            $gmtDate["hours"] = $gmtDate["hours"] + 24;
+        else if ($gmtDate['hours'] < 0) {
+            $gmtDate['hours'] = $gmtDate['hours'] + 24;
         }
         return $gmtDate;
     }
     
+    // GMT vars
     $gmtDate = gmGetDate();
+    $gmtDateHour = $gmtDate['hours'];
 
     // Here: LA, must account for daylight savings
     $localT = localtime(time(), true);
@@ -69,7 +71,10 @@ echo <<<EOT
         "there": "$thereHour:$minutes",
         "there_h": "$thereHour",
         "there_m": "$minutes",
-        "there_s": "0"
+        "there_s": "0",
+        "gmt_h": "$gmtDateHour",
+        "gmt_m": "$minutes",
+        "gmt_s": "0"
     },
     "daysLeft": {
         "remaining": "$daysLeft"

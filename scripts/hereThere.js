@@ -3,7 +3,15 @@ function arrangeCanvas() {
     var weatherObj = {},
         timeObj = {};
 
-    var intervalId = 0;
+    var intervalClock = 0,
+        intervalCheck = 0,
+        clock1 = new Date().getTime(),
+        clock2 = new Date().getTime();
+
+    var dst = true,
+        hereOffset = (dst) ? -7 : -8,
+        thereOffset = 7;
+
     // Separate canvases to reduce amount of drawing
     // Background image canvas 
     var canvas = $('#app')[0],
@@ -32,11 +40,22 @@ function arrangeCanvas() {
                 printObjects(ctx2, weatherObj, timeObj);
 
                 // Refresh text canvas every second
-                intervalId = setInterval(function() {
-                    updateTimeObj(timeObj, null);
+                intervalClock = setInterval(function() {
+                    updateTimeObj(timeObj, false);
                     ctx2.clearRect(0, 0, canvasText.width, canvasText.height);
                     printObjects(ctx2, weatherObj, timeObj);
                 }, 1000);
+                // Compare clock since last update,
+                // force an update if >1 mins have passed without an update
+                intervalCheck = setInterval(function() {
+                    clock1 += 30000
+                    clock2 = new Date().getTime();
+                    if ((clock2 - clock1) > 30000) {
+                        updateTimeObj(timeObj, true,
+                        createUpdatedTimeObj(clock2, hereOffset, thereOffset));
+                    }
+                    clock1 = new Date().getTime();
+                }, 30000);
             });
         };
         backgroundImage.src = 'images/tempWallpaper.jpg';
@@ -83,6 +102,43 @@ function getTime(obj) {
         deferred.resolve();
     });
     return deferred.promise();
+}
+
+// Create a new time object using local time.
+// time should be the result from JS Date.getTime() which is in ms
+function createUpdatedTimeObj(time, hereOffset, thereOffset) {
+    var newTimeObj = {};
+    var timeSec = Math.floor(time/1000);
+    
+    // 60 seconds in a minute
+    // 3600 = 60*60 seconds in an hour
+    // 86400 = 60*60*24 seconds in a day
+    newTimeObj.gmt_h = Math.floor((timeSec % 86400) / 3600);
+    newTimeObj.gmt_m = Math.floor((timeSec % 3600) / 60);
+    newTimeObj.gmt_s = Math.floor(timeSec % 60);
+
+    newTimeObj.here_h = calculateHourOffset(newTimeObj.gmt_h, hereOffset);
+    newTimeObj.here_m = newTimeObj.gmt_m;
+    newTimeObj.here_s = newTimeObj.gmt_s;
+
+    newTimeObj.there_h = calculateHourOffset(newTimeObj.gmt_h, thereOffset);
+    newTimeObj.there_m = newTimeObj.gmt_m;
+    newTimeObj.there_s = newTimeObj.gmt_s;
+
+    return newTimeObj;
+}
+
+// hour is given in GMT time 
+// offset should be negative if applicable
+function calculateHourOffset(hour, offset) {
+    var tmpHr = hour + offset;
+    if (tmpHr >= 24) {
+        tmpHr -= 24;
+    }
+    else if (tmpHr < 0) {
+        tmpHr += 24;
+    }
+    return tmpHr;
 }
 
 // Print loading message
@@ -148,11 +204,15 @@ function timeFormatter(timeObj, here) {
 }
 
 // Increase the time by one second or set seconds
-function updateTimeObj(timeObj, seconds) {
-    // Manual set the seconds
-    if (seconds) {
-        timeObj.here_s = seconds;
-        timeObj.there_s = seconds;
+function updateTimeObj(timeObj, reset, newTimeObj) {
+    // Manual reset of timeObj
+    if (reset) {
+        timeObj.here_h = newTimeObj.here_h;
+        timeObj.here_m = newTimeObj.here_m;
+        timeObj.here_s = newTimeObj.here_s;
+        timeObj.there_h = newTimeObj.there_h;
+        timeObj.there_m = newTimeObj.there_m;
+        timeObj.there_s = newTimeObj.there_s;
     }
     // Increment by 1 second
     else {
