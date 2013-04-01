@@ -28,14 +28,18 @@ function arrangeCanvas() {
 		ctx = canvas.getContext('2d');
         ctx2 = canvasText.getContext('2d');
 	    
-        backgroundImage.onload = function() {
-            // Loading...
-            ctx.drawImage(backgroundImage, 0, 0);
+        imgpreload(["images/tempWallpaper.jpg", "images/tempWallpaper2.jpg"],
+        function(images) {
+            ctx.drawImage(images[0], 0, 0);
+            //ctx.drawImage(backgroundImage, 321, 0, 321, 1136, 321, 0, 321, 1136);
             printLoadingMessage(ctx2);
 
             // After fetching data
             $.when(getWeather(weatherObj), getTime(timeObj))
             .done(function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawWallpaper(ctx, images, timeObj);
+
                 ctx2.clearRect(0, 0, canvasText.width, canvasText.height);
                 printObjects(ctx2, weatherObj, timeObj);
 
@@ -46,7 +50,7 @@ function arrangeCanvas() {
                     printObjects(ctx2, weatherObj, timeObj);
                 }, 1000);
                 // Compare clock since last update,
-                // force an update if >1 mins have passed without an update
+                // force an update if >30s have passed without an update
                 intervalCheck = setInterval(function() {
                     clock1 += 30000
                     clock2 = new Date().getTime();
@@ -57,8 +61,7 @@ function arrangeCanvas() {
                     clock1 = new Date().getTime();
                 }, 30000);
             });
-        };
-        backgroundImage.src = 'images/tempWallpaper.jpg';
+        });
 	}
 }
 
@@ -141,6 +144,31 @@ function calculateHourOffset(hour, offset) {
     return tmpHr;
 }
 
+// Draw wallpaper according to here/there time
+function drawWallpaper(ctx, images, timeObj) {
+    var halfWidth = 320,
+        height = 1136;
+
+    // There half:
+    if (isDay(timeObj, false)) {
+        ctx.drawImage(images[1], 0, 0, halfWidth, height, 0, 0, halfWidth, height);
+    }
+    else {
+        ctx.drawImage(images[0], 0, 0, halfWidth, height, 0, 0, halfWidth, height);
+    }
+
+    // Here half:
+    if (isDay(timeObj, true)) {
+        ctx.drawImage(images[1], halfWidth, 0, halfWidth, height,
+        halfWidth, 0, halfWidth, height);
+    }
+    else {
+        ctx.drawImage(images[0], halfWidth, 0, halfWidth, height,
+        halfWidth, 0, halfWidth, height);
+    }
+}
+
+
 // Print loading message
 function printLoadingMessage(ctx) {
     ctx.font = "100px Arial";
@@ -150,7 +178,17 @@ function printLoadingMessage(ctx) {
 
 // Print all of the objects and their data to the canvas
 function printObjects(ctx, weatherObj, timeObj) {
-    var degSign = 0xB0;
+    var degSign = 0xB0,
+        fillStyleHere = "#89d7ff",
+        fillStyleThere = "#89d7ff";
+
+    if (isDay(timeObj, true)) {
+        fillStyleHere = "#0D0F36";
+    }
+    if (isDay(timeObj, false)) {
+        fillStyleThere = "#0D0F36";
+    }
+
     
     // Time remaining until next meet
     ctx.font = "100px Arial";
@@ -158,15 +196,16 @@ function printObjects(ctx, weatherObj, timeObj) {
     ctx.fillText(timeObj.days_left, 175, 250);
 
 	ctx.font="40px Arial";
-	ctx.fillStyle="#89d7ff";
 	
     // There block
+	ctx.fillStyle = fillStyleThere;
 	ctx.fillText("BKK", 50, 350);
     ctx.fillText(timeFormatter(timeObj, false), 50, 390);
 	ctx.fillText(weatherObj.there_temp+String.fromCharCode(degSign)+"F", 50,
     430);
     
 	// Here block
+    ctx.fillStyle = fillStyleHere;
 	ctx.fillText("LA", 450, 350);
     ctx.fillText(timeFormatter(timeObj, true), 450, 390);
 	ctx.fillText(weatherObj.here_temp+String.fromCharCode(degSign)+"F", 450,
@@ -203,7 +242,8 @@ function timeFormatter(timeObj, here) {
     return (h + ':' + m + ':' + s);
 }
 
-// Increase the time by one second or set seconds
+// Increase the time by one second or manually set the active
+// timeObj to a new time (e.g., sync)
 function updateTimeObj(timeObj, reset, newTimeObj) {
     // Manual reset of timeObj
     if (reset) {
@@ -246,4 +286,15 @@ function updateTimeObj(timeObj, reset, newTimeObj) {
     }
 
    return timeObj;
+}
+
+// Determine if day or night,
+// here parameter is a boolean
+function isDay(timeObj, here) {
+    if (here) {
+        return (timeObj.here_h >= 6 && timeObj.here_h <= 20);
+    }
+    else {
+        return (timeObj.there_h >= 6 && timeObj.there_h <= 20);
+    }
 }
