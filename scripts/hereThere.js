@@ -3,6 +3,9 @@ function arrangeCanvas() {
     var weatherObj = {},
         timeObj = {};
 
+    var flags = {};
+    flags.updateWallpaper = false;
+
     var intervalClock = 0,
         intervalCheck = 0,
         clock1 = new Date().getTime(),
@@ -30,24 +33,25 @@ function arrangeCanvas() {
 	    
         imgpreload(["images/tempWallpaper.jpg", "images/tempWallpaper2.jpg"],
         function(images) {
+            // Loading
             ctx.drawImage(images[0], 0, 0);
-            //ctx.drawImage(backgroundImage, 321, 0, 321, 1136, 321, 0, 321, 1136);
             printLoadingMessage(ctx2);
 
             // After fetching data
             $.when(getWeather(weatherObj), getTime(timeObj))
             .done(function() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                drawWallpaper(ctx, images, timeObj);
-
-                ctx2.clearRect(0, 0, canvasText.width, canvasText.height);
-                printObjects(ctx2, weatherObj, timeObj);
+                drawWallpaper(ctx, canvas, images, timeObj);
+                printObjects(ctx2, canvasText, weatherObj, timeObj);
 
                 // Refresh text canvas every second
                 intervalClock = setInterval(function() {
-                    updateTimeObj(timeObj, false);
-                    ctx2.clearRect(0, 0, canvasText.width, canvasText.height);
-                    printObjects(ctx2, weatherObj, timeObj);
+                    updateTimeObj(timeObj, false, null, flags);
+                    printObjects(ctx2, canvasText, weatherObj, timeObj);
+                    if (flags.updateWallpaper) {
+                        drawWallpaper(ctx, canvas, images, timeObj);
+                        flags.updateWallpaper = false;
+                        console.log('Updated wallpaper');
+                    }
                 }, 1000);
                 // Compare clock since last update,
                 // force an update if >30s have passed without an update
@@ -57,6 +61,7 @@ function arrangeCanvas() {
                     if ((clock2 - clock1) > 30000) {
                         updateTimeObj(timeObj, true,
                         createUpdatedTimeObj(clock2, hereOffset, thereOffset));
+                        drawWallpaper(ctx, canvas, images, timeObj);
                     }
                     clock1 = new Date().getTime();
                 }, 30000);
@@ -145,10 +150,11 @@ function calculateHourOffset(hour, offset) {
 }
 
 // Draw wallpaper according to here/there time
-function drawWallpaper(ctx, images, timeObj) {
-    var halfWidth = 320,
-        height = 1136;
+function drawWallpaper(ctx, canvas, images, timeObj) {
+    var halfWidth = canvas.width/2,
+        height = canvas.height;
 
+    ctx.clearRect(0, 0, canvas.width, canvas,height);
     // There half:
     if (isDay(timeObj, false)) {
         ctx.drawImage(images[1], 0, 0, halfWidth, height, 0, 0, halfWidth, height);
@@ -170,14 +176,14 @@ function drawWallpaper(ctx, images, timeObj) {
 
 
 // Print loading message
-function printLoadingMessage(ctx) {
+function printLoadingMessage(ctx, canvas) {
     ctx.font = "100px Arial";
     ctx.fillStyle = "rgba(137, 215, 255, 0.5)";
     ctx.fillText("Loading...", 100, 350);
 }
 
 // Print all of the objects and their data to the canvas
-function printObjects(ctx, weatherObj, timeObj) {
+function printObjects(ctx, canvas, weatherObj, timeObj) {
     var degSign = 0xB0,
         fillStyleHere = "#89d7ff",
         fillStyleThere = "#89d7ff";
@@ -189,7 +195,7 @@ function printObjects(ctx, weatherObj, timeObj) {
         fillStyleThere = "#0D0F36";
     }
 
-    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     // Time remaining until next meet
     ctx.font = "100px Arial";
     ctx.fillStyle = "rgba(137, 215, 255, 0.2)";
@@ -244,7 +250,7 @@ function timeFormatter(timeObj, here) {
 
 // Increase the time by one second or manually set the active
 // timeObj to a new time (e.g., sync)
-function updateTimeObj(timeObj, reset, newTimeObj) {
+function updateTimeObj(timeObj, reset, newTimeObj, flags) {
     // Manual reset of timeObj
     if (reset) {
         timeObj.here_h = newTimeObj.here_h;
@@ -274,6 +280,8 @@ function updateTimeObj(timeObj, reset, newTimeObj) {
                 if (hrHere >= 24 || hrThere >= 24) {
                     hr = 0;
                 }
+
+                flags.updateWallpaper = true;
             }
         }
         timeObj.here_h = hrHere;
@@ -292,9 +300,9 @@ function updateTimeObj(timeObj, reset, newTimeObj) {
 // here parameter is a boolean
 function isDay(timeObj, here) {
     if (here) {
-        return (timeObj.here_h >= 6 && timeObj.here_h <= 20);
+        return (timeObj.here_h >= 6 && timeObj.here_h < 20);
     }
     else {
-        return (timeObj.there_h >= 6 && timeObj.there_h <= 20);
+        return (timeObj.there_h >= 6 && timeObj.there_h < 20);
     }
 }
