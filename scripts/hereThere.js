@@ -42,6 +42,7 @@ function arrangeCanvas() {
             .done(function() {
                 drawWallpaper(ctx, canvas, images, timeObj);
                 printObjects(ctx2, canvasText, weatherObj, timeObj);
+                arrangeUICanvas(isDay(timeObj, true));
 
                 // Refresh text canvas every second
                 intervalClock = setInterval(function() {
@@ -62,6 +63,7 @@ function arrangeCanvas() {
                         updateTimeObj(timeObj, true,
                         createUpdatedTimeObj(clock2, hereOffset, thereOffset));
                         drawWallpaper(ctx, canvas, images, timeObj);
+                        arrangeUICanvas(isDay(timeObj, true));
                     }
                     clock1 = new Date().getTime();
                 }, 30000);
