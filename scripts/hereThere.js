@@ -51,7 +51,7 @@ function arrangeCanvas() {
                     if (flags.updateWallpaper) {
                         drawWallpaper(ctx, canvas, images, timeObj);
                         flags.updateWallpaper = false;
-                        console.log('Updated wallpaper');
+                        arrangeUICanvas(isDay(timeObj, true));
                     }
                 }, 1000);
                 // Compare clock since last update,
