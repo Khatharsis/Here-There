@@ -33,6 +33,9 @@ function arrangeCanvas() {
 	    
         imgpreload(["images/tempWallpaper.jpg", "images/tempWallpaper2.jpg"],
         function(images) {
+            // Hide spinner
+            $('#loader').css("display", "none");
+
             // Loading
             ctx.drawImage(images[0], 0, 0);
             printLoadingMessage(ctx2);

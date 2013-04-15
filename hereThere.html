@@ -12,6 +12,7 @@
 
 	<script src="scripts/modernizr-2.6.2.min.js"></script>
 	
+    <link rel="stylesheet" href="styles/font-awesome.min.css">
 	<style>
 		* {
 			margin: 0;
@@ -27,6 +28,11 @@
             border: 1px solid #000;
 		    position: absolute;            
         }
+        #loader {
+            position: absolute;
+            margin-top: 542px;
+            margin-left: 300px;
+        }
 	</style>
 </head>
 <body>
@@ -34,8 +40,8 @@
 		<p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
 	<![endif]-->
 
-	
 	<div id="wrapper">
+        <div id="loader"><i class="icon-spinner icon-spin icon-4x"></i></div>
 		<canvas id="app" width="640" height="1136">Your browser does not support canvas!</canvas>
         <canvas id="app-text" width="640" height="1136"></canvas>
         <canvas id="app-about" width="640" height="1136"></canvas>
@@ -67,7 +73,6 @@
 
 $(document).ready(function() {
 	arrangeCanvas();
-    //arrangeUICanvas(true);
     arrangeAboutCanvas();
 });
 
