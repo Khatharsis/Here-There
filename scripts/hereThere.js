@@ -279,12 +279,9 @@ function updateTimeObj(timeObj, reset, newTimeObj, flags) {
 
             if (min >= 60) {
                 min = 0;
-                hrHere++;
-                hrThere++;
 
-                if (hrHere >= 24 || hrThere >= 24) {
-                    hr = 0;
-                }
+                hrHere = (++hrHere >= 24) ? 0 : hrHere;
+                hrThere = (++hrThere >= 24) ? 0 : hrThere;
 
                 flags.updateWallpaper = true;
             }

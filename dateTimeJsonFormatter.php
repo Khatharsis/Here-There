@@ -12,7 +12,7 @@
     // date changes as well, but irrelevant in this script.
     function adjustGmtDate($gmtDate, $timezoneOffset) {
         $gmtDate['hours'] = $gmtDate['hours'] + $timezoneOffset;
-        if ($gmtDate['hours'] > 24) {
+        if ($gmtDate['hours'] >= 24) {
             $gmtDate['hours'] = $gmtDate['hours'] - 24;
         }
         else if ($gmtDate['hours'] < 0) {
