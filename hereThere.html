@@ -26,12 +26,25 @@
 		}
 		canvas {
             border: 1px solid #000;
-		    position: absolute;            
+		    position: absolute;
+/*            display: none;*/
         }
         #loader {
             position: absolute;
             margin-top: 542px;
             margin-left: 300px;
+        }
+        #settings {
+            position: absolute;
+            margin-top: 60px;
+            font-size: 1.5em;
+            display: none;
+        }
+        input[type=text] {
+            font-size: 1.5em;
+        }
+        input[type=button] {
+            font-size: 1.5em;
         }
 	</style>
 </head>
@@ -44,8 +57,48 @@
         <div id="loader"><i class="icon-spinner icon-spin icon-4x"></i></div>
 		<canvas id="app" width="640" height="1136">Your browser does not support canvas!</canvas>
         <canvas id="app-text" width="640" height="1136"></canvas>
+        <canvas id="app-overlay" width="640" height="1136"></canvas>
         <canvas id="app-about" width="640" height="1136"></canvas>
         <canvas id="app-UI" width="640" height="1136"></canvas>
+
+        <div id="settings">
+            <form method="post">
+                <strong>Here</strong>
+                <br/>Location Tag (2-3 chars): 
+                    <input type="text" id="hereLoc" maxlength="3" size="5">
+                <br/><a
+                href="http://answers.yahoo.com/question/index?qid=20091216132708AAf7o0g"
+                target="_blank">Weather Code</a> (5-8 chars):
+                    <input type="text" id="hereWeather" maxlength="8"
+                    size="10">
+                <br/>Timezone Offset from GMT (e.g., -8 for PST):
+                    <input type="text" id="hereTimeOffset" maxlength="3"
+                    size="3">
+
+
+                <br/><br/>
+                <strong>There</strong>
+                <br/>There Location Tag (2-3 chars): 
+                    <input type="text" id="thereLoc" maxlength="3" size="5">
+                <br/><a
+                href="http://answers.yahoo.com/question/index?qid=20091216132708AAf7o0g"
+                target="_blank">Weather Code</a> (5-8 chars):
+                    <input type="text" id="thereWeather" maxlength="8"
+                    size="10">
+                <br/>Timezone Offset from GMT (e.g., 7 for ICT):
+                    <input type="text" id="thereTimeOffset" maxlength="3"
+                    size="3">
+
+                <br/><br/>
+                <strong>Anticipated Date</strong>
+                <br/>Date to countdown to (mm/dd/yyyy):
+                    <input type="text" id="countdownDate" maxlength="10"
+                    size="12">
+
+                <br/><br/>
+                <input type="button" value="Submit" id="settingsSubmitButton"></input>
+            </form>
+        </div>
 	</div>
 	
 	
@@ -72,7 +125,9 @@
 
 
 $(document).ready(function() {
+    init();
 	arrangeCanvas();
+    arrangeOverlayCanvas();
     arrangeAboutCanvas();
 });
 

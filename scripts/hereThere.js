@@ -1,20 +1,71 @@
+var APP = {
+    // LA
+    ht_hereLoc: 'LA',
+    ht_hereWeatherCode: 2442047,
+    ht_hereTimeOffset: -8,
+    // BKK
+    ht_thereLoc: 'BKK',
+    ht_thereWeatherCode: 1225448,
+    ht_thereTimeOffset: 7,
+
+    ht_countdownDate: "05/10/2013",
+
+    ht_appObj: {}
+};
+
+// Initialization function - sync globals with localStorage if applicable
+function init() {
+    // Event handlers
+    $('#settingsSubmitButton').on('click', processSettingsForm);
+    
+    // Set up global vars
+    // here/thereWeatherCode: must have a value
+    // countdownDate: can be an empty string
+    if (localStorage.ht_hereLoc) {
+        APP.ht_hereLoc = localStorage.ht_hereLoc;
+    }
+    if (localStorage.ht_hereWeatherCode) {
+        APP.ht_hereWeatherCode = localStorage.ht_hereWeatherCode;
+    }
+    if (localStorage.ht_hereTimeOffset) {
+        APP.ht_hereTimeOffset = localStorage.ht_hereTimeOffset;
+    }
+    else if (localStorage.ht_hereTimeOffset && 
+        localStorage.ht_hereTimeOffset == 0) {
+        APP.ht_hereTimeOffset = localStorage.ht_hereTimeOffset;
+    }
+
+    if (localStorage.ht_thereLoc) {
+        APP.ht_thereLoc = localStorage.ht_thereLoc;
+    }
+    if (localStorage.ht_thereWeatherCode) {
+        APP.ht_thereWeatherCode = localStorage.ht_thereWeatherCode;
+    }
+    if (localStorage.ht_thereTimeOffset) {
+        APP.ht_thereTimeOffset = localStorage.ht_thereTimeOffset;
+    }
+    else if (localStorage.ht_thereTimeOffset &&
+        localStorage.ht_thereTimeOffset == 0) {
+        APP.ht_thereTimeOffset = localStorage.ht_thereTimeOffset;
+    }
+
+    if (localStorage.ht_countdownDate != null &&
+        localStorage.ht_countdownDate != undefined) {
+        APP.ht_countdownDate = localStorage.ht_countdownDate;
+    }
+
+    // Prepopulate the Settings form
+    $('input#hereLoc').val(APP.ht_hereLoc);
+    $('input#hereWeather').val(APP.ht_hereWeatherCode);
+    $('input#hereTimeOffset').val(APP.ht_hereTimeOffset);
+    $('input#thereLoc').val(APP.ht_thereLoc);
+    $('input#thereWeather').val(APP.ht_thereWeatherCode);
+    $('input#thereTimeOffset').val(APP.ht_thereTimeOffset);
+    $('input#countdownDate').val(APP.ht_countdownDate);
+}
+
 // Set up the Canvas
 function arrangeCanvas() {
-    var weatherObj = {},
-        timeObj = {};
-
-    var flags = {};
-    flags.updateWallpaper = false;
-
-    var intervalClock = 0,
-        intervalCheck = 0,
-        clock1 = new Date().getTime(),
-        clock2 = new Date().getTime();
-
-    var dst = true,
-        hereOffset = (dst) ? -7 : -8,
-        thereOffset = 7;
-
     // Separate canvases to reduce amount of drawing
     // Background image canvas 
     var canvas = $('#app')[0],
@@ -30,6 +81,9 @@ function arrangeCanvas() {
 	if (canvas.getContext) {
 		ctx = canvas.getContext('2d');
         ctx2 = canvasText.getContext('2d');
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx2.clearRect(0, 0, canvasText.width, canvasText.height);
 	    
         imgpreload(["images/tempWallpaper.jpg", "images/tempWallpaper2.jpg"],
         function(images) {
@@ -40,39 +94,62 @@ function arrangeCanvas() {
             ctx.drawImage(images[0], 0, 0);
             printLoadingMessage(ctx2);
 
-            // After fetching data
-            $.when(getWeather(weatherObj), getTime(timeObj))
-            .done(function() {
-                drawWallpaper(ctx, canvas, images, timeObj);
-                printObjects(ctx2, canvasText, weatherObj, timeObj);
-                arrangeUICanvas(isDay(timeObj, true));
-
-                // Refresh text canvas every second
-                intervalClock = setInterval(function() {
-                    updateTimeObj(timeObj, false, null, flags);
-                    printObjects(ctx2, canvasText, weatherObj, timeObj);
-                    if (flags.updateWallpaper) {
-                        drawWallpaper(ctx, canvas, images, timeObj);
-                        flags.updateWallpaper = false;
-                        arrangeUICanvas(isDay(timeObj, true));
-                    }
-                }, 1000);
-                // Compare clock since last update,
-                // force an update if >30s have passed without an update
-                intervalCheck = setInterval(function() {
-                    clock1 += 30000
-                    clock2 = new Date().getTime();
-                    if ((clock2 - clock1) > 30000) {
-                        updateTimeObj(timeObj, true,
-                        createUpdatedTimeObj(clock2, hereOffset, thereOffset));
-                        drawWallpaper(ctx, canvas, images, timeObj);
-                        arrangeUICanvas(isDay(timeObj, true));
-                    }
-                    clock1 = new Date().getTime();
-                }, 30000);
-            });
+            // Retrieve time/weather values and display the actual app
+            displayApp(canvas, ctx, canvasText, ctx2, images);
         });
 	}
+}
+
+// The brains of the app - set up/clear intervals, grab data, display and
+// update the necessary images and text
+function displayApp(canvas, ctx, canvasText, ctx2, images) {
+    var weatherObj = {},
+        timeObj = {};
+
+    var flags = {};
+    flags.updateWallpaper = false;
+
+    var intervalClock = 0,
+        intervalCheck = 0,
+        clock1 = new Date().getTime(),
+        clock2 = new Date().getTime();
+
+    var dst = true,
+        hereOffset = (dst) ? APP.ht_hereTimeOffset+1 : APP.ht_hereTimeOffset,
+        thereOffset = APP.ht_thereTimeOffset;
+
+    // Only when the weather and time objects have been set can we continue
+    $.when(getWeather(weatherObj), getTime(timeObj))
+    .done(function() {
+        drawWallpaper(ctx, canvas, images, timeObj);
+        printObjects(ctx2, canvasText, weatherObj, timeObj);
+        arrangeUICanvas(isDay(timeObj, true));
+        registerUICanvasEventHandler();
+
+        // Refresh text canvas every second
+        APP.ht_appObj.intervalClock = setInterval(function() {
+            updateTimeObj(timeObj, false, null, flags);
+            printObjects(ctx2, canvasText, weatherObj, timeObj);
+            if (flags.updateWallpaper) {
+                drawWallpaper(ctx, canvas, images, timeObj);
+                flags.updateWallpaper = false;
+                arrangeUICanvas(isDay(timeObj, true));
+            }
+        }, 1000);
+        // Compare clock since last update,
+        // force an update if >30s have passed without an update
+        APP.ht_appObj.intervalCheck = setInterval(function() {
+            clock1 += 30000
+            clock2 = new Date().getTime();
+            if ((clock2 - clock1) > 30000) {
+                updateTimeObj(timeObj, true,
+                createUpdatedTimeObj(clock2, hereOffset, thereOffset));
+                drawWallpaper(ctx, canvas, images, timeObj);
+                arrangeUICanvas(isDay(timeObj, true));
+            }
+            clock1 = new Date().getTime();
+        }, 30000);
+    });
 }
 
 // Query Yahoo! Weather
@@ -83,7 +160,10 @@ function getWeather(obj) {
     var deferred = $.Deferred();
 	// LA: 2442047
 	// BKK: 1225448
-	var query = "http://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid in (1225448, 2442047)&format=json&callback=?";
+	var query = "http://query.yahooapis.com/v1/public/yql?q=select * from " +
+        "weather.forecast where woeid in (" + APP.ht_thereWeatherCode +
+        ", " + APP.ht_hereWeatherCode +
+        ")&format=json&callback=?";
 	$.getJSON(query, function (data) {
 		obj.there_temp = data.query.results.channel[0].item.condition.temp;
 		obj.here_temp = data.query.results.channel[1].item.condition.temp;
@@ -97,8 +177,11 @@ function getWeather(obj) {
 function getTime(obj) {
     var deferred = $.Deferred();
 
-    var query = "dateTimeJsonFormatter.php";
-    $.getJSON(query, function (data) {
+    var query = "dateTimeJsonFormatter.php",
+        args = "?here=" + APP.ht_hereTimeOffset +
+                "&there=" + APP.ht_thereTimeOffset +
+                "&date=" + APP.ht_countdownDate;
+    $.getJSON(query+args, function (data) {
         obj.here = data.currentTime.here;
         obj.here_h = parseInt(data.currentTime.here_h, 10);
         obj.here_m = parseInt(data.currentTime.here_m, 10);
@@ -210,14 +293,14 @@ function printObjects(ctx, canvas, weatherObj, timeObj) {
 	
     // There block
 	ctx.fillStyle = fillStyleThere;
-	ctx.fillText("BKK", 50, 350);
+	ctx.fillText(APP.ht_thereLoc, 50, 350);
     ctx.fillText(timeFormatter(timeObj, false), 50, 390);
 	ctx.fillText(weatherObj.there_temp+String.fromCharCode(degSign)+"F", 50,
     430);
     
 	// Here block
     ctx.fillStyle = fillStyleHere;
-	ctx.fillText("LA", 450, 350);
+	ctx.fillText(APP.ht_hereLoc, 450, 350);
     ctx.fillText(timeFormatter(timeObj, true), 450, 390);
 	ctx.fillText(weatherObj.here_temp+String.fromCharCode(degSign)+"F", 450,
     430);
@@ -307,4 +390,63 @@ function isDay(timeObj, here) {
     else {
         return (timeObj.there_h >= 6 && timeObj.there_h < 20);
     }
+}
+
+// Force refresh - hit refresh button or submit Settings form
+function forceRefresh() {
+    clearInterval(APP.ht_appObj.intervalClock);
+    clearInterval(APP.ht_appObj.intervalCheck);
+    arrangeCanvas();
+}
+
+// Settings form processing
+function processSettingsForm() {
+    var hereLoc = $('input[id=hereLoc]').val(),
+        hereWeather = $('input[id=hereWeather]').val(),
+        hereTimeOffset = $('input[id=hereTimeOffset]').val(),
+        thereLoc = $('input[id=thereLoc]').val(),
+        thereWeather = $('input[id=thereWeather]').val(),
+        thereTimeOffset = $('input[id=thereTimeOffset]').val(),
+        countdownDate = $('input[id=countdownDate]').val();
+
+    // Simple validation
+    // countdownDate regex: http://www.mkyong.com/regular-expressions/how-to-validate-date-with-regular-expression/ 
+    var dateRegex =
+        /(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])\/((20)[1-9]\d)/;
+
+    // Update localStorage values if necessary
+    if (hereLoc) {
+        APP.ht_hereLoc = hereLoc;
+        localStorage.ht_hereLoc = hereLoc;
+    }
+    if (hereWeather) {
+        APP.ht_hereWeatherCode = hereWeather;
+        localStorage.ht_hereWeatherCode = hereWeather;
+    }
+    if (hereTimeOffset >= -12 && hereTimeOffset <= 14) {
+        APP.ht_hereTimeOffset = hereTimeOffset;
+        localStorage.ht_hereTimeOffset = hereTimeOffset;
+    }
+
+    if (thereLoc) {
+        APP.ht_thereWeatherCode = thereWeather;
+        localStorage.ht_thereWeatherCode = thereWeather;
+    }
+    if (thereWeather) {
+        APP.ht_thereWeatherCode = thereWeather;
+        localStorage.ht_thereWeatherCode = thereWeather;
+    }
+    if (thereTimeOffset >= -12 && thereTimeOffset <= 14) {
+        APP.ht_thereTimeOffset = thereTimeOffset;
+        localStorage.ht_thereTimeOffset = thereTimeOffset;
+    }
+
+    if (dateRegex.test(countdownDate) || dateRegex == "") {
+        APP.countdownDate = countdownDate;
+        localStorage.ht_countdownDate = countdownDate;
+    }
+
+    $('#app-overlay').hide();
+    $('#settings').hide();
+    forceRefresh();
 }

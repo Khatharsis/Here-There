@@ -1,4 +1,9 @@
 <?php
+    // Default vars
+    $hereTimeOffset = ($_GET['here'] != null) ? $_GET['here'] : -8;
+    $thereTimeOffset = ($_GET['there'] != null) ? $_GET['there'] : 7;
+    $futureDateString = ($_GET['date'] != null) ? $_GET['date'] : '05/10/2013';
+
     //http://www.php.net/manual/en/function.getdate.php#87691
     function gmGetDate($timestamp = null) {
         $arr = array('seconds', 'minutes', 'hours', 'mday', 'wday', 'mon',
@@ -29,14 +34,14 @@
     $localT = localtime(time(), true);
     $hereDate = null;
     if ($localT['tm_isdst'] > 0) {
-        $hereDate = adjustGmtDate($gmtDate, -7);
+        $hereDate = adjustGmtDate($gmtDate, $hereTimeOffset+1);
     }
     else {
-        $hereDate = adjustGmtDate($gmtDate, -8);
+        $hereDate = adjustGmtDate($gmtDate, $hereTimeOffset);
     }
 
     // There: BKK, no daylight savings
-    $thereDate = adjustGmtDate($gmtDate, 7);
+    $thereDate = adjustGmtDate($gmtDate, $thereTimeOffset);
 
     $hereHour = $hereDate['hours'];
     $thereHour = $thereDate['hours'];
@@ -44,7 +49,7 @@
     
     $daysLeft = '';
     $currentDate = strtotime("now");
-    $futureDate = strtotime("05/10/2013");
+    $futureDate = strtotime($futureDateString);
     if ($currentDate < $futureDate) {
         $differenceInSec = $futureDate - $currentDate;
         $differenceInDetail = array(
