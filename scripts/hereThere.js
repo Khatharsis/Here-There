@@ -2,12 +2,15 @@ var APP = {
     // LA
     ht_hereLoc: 'LA',
     ht_hereWeatherCode: 2442047,
-    ht_hereTimeOffset: -8,
+    ht_hereTimeOffset: '-8.0',
+    ht_hereDst: '',
     // BKK
     ht_thereLoc: 'BKK',
     ht_thereWeatherCode: 1225448,
-    ht_thereTimeOffset: 7,
+    ht_thereTimeOffset: '7.0',
+    ht_thereDst: '',
 
+    ht_isDst: false,
     ht_countdownDate: "05/10/2013",
 
     ht_appObj: {}
@@ -34,6 +37,9 @@ function init() {
         localStorage.ht_hereTimeOffset == 0) {
         APP.ht_hereTimeOffset = localStorage.ht_hereTimeOffset;
     }
+    if (localStorage.ht_hereDst) {
+        APP.ht_hereDst = localStorage.ht_hereDst;
+    }
 
     if (localStorage.ht_thereLoc) {
         APP.ht_thereLoc = localStorage.ht_thereLoc;
@@ -48,6 +54,9 @@ function init() {
         localStorage.ht_thereTimeOffset == 0) {
         APP.ht_thereTimeOffset = localStorage.ht_thereTimeOffset;
     }
+    if (localStorage.ht_thereDst) {
+        APP.ht_thereDst = localStorage.ht_thereDst;
+    }
 
     if (localStorage.ht_countdownDate != null &&
         localStorage.ht_countdownDate != undefined) {
@@ -57,10 +66,12 @@ function init() {
     // Prepopulate the Settings form
     $('input#hereLoc').val(APP.ht_hereLoc);
     $('input#hereWeather').val(APP.ht_hereWeatherCode);
-    $('input#hereTimeOffset').val(APP.ht_hereTimeOffset);
+    $('#hereTimeOffset').val(APP.ht_hereTimeOffset);
+    $('input#hereDst').prop('checked', APP.ht_hereDst);
     $('input#thereLoc').val(APP.ht_thereLoc);
     $('input#thereWeather').val(APP.ht_thereWeatherCode);
-    $('input#thereTimeOffset').val(APP.ht_thereTimeOffset);
+    $('#thereTimeOffset').val(APP.ht_thereTimeOffset);
+    $('input#thereDst').prop('checked', APP.ht_thereDst);
     $('input#countdownDate').val(APP.ht_countdownDate);
 }
 
@@ -114,9 +125,8 @@ function displayApp(canvas, ctx, canvasText, ctx2, images) {
         clock1 = new Date().getTime(),
         clock2 = new Date().getTime();
 
-    var dst = true,
-        hereOffset = (dst) ? APP.ht_hereTimeOffset+1 : APP.ht_hereTimeOffset,
-        thereOffset = APP.ht_thereTimeOffset;
+    // Set these variables within $.when(), after global vars have been set
+    var hereDst, thereDst, hereOffset, thereOffset;
 
     // Only when the weather and time objects have been set can we continue
     $.when(getWeather(weatherObj), getTime(timeObj))
@@ -125,6 +135,16 @@ function displayApp(canvas, ctx, canvasText, ctx2, images) {
         printObjects(ctx2, canvasText, weatherObj, timeObj);
         arrangeUICanvas(isDay(timeObj, true));
         registerUICanvasEventHandler();
+
+        // Default value of empty string
+        // Here: LA, depends on daylight savings, must be set within .$when()
+        // There: BKK, does not follow daylight savings
+        hereDst = (APP.ht_hereDst == '') ? APP.ht_isDst : APP.ht_hereDst;
+        thereDst = (APP.ht_thereDst == '') ? false : APP.ht_thereDst;
+        hereOffset = (hereDst) ? APP.ht_hereTimeOffset+1 :
+            APP.ht_hereTimeOffset;
+        thereOffset = (thereDst) ? APP.ht_thereTimeOffset+1 :
+            APP.ht_thereTimeOffset;
 
         // Refresh text canvas every second
         APP.ht_appObj.intervalClock = setInterval(function() {
@@ -179,7 +199,9 @@ function getTime(obj) {
 
     var query = "dateTimeJsonFormatter.php",
         args = "?here=" + APP.ht_hereTimeOffset +
+                "&hereDst=" + APP.ht_hereDst +
                 "&there=" + APP.ht_thereTimeOffset +
+                "&thereDst=" + APP.ht_thereDst +
                 "&date=" + APP.ht_countdownDate;
     $.getJSON(query+args, function (data) {
         obj.here = data.currentTime.here;
@@ -194,6 +216,8 @@ function getTime(obj) {
         var sec = date.getSeconds();
         obj.here_s = sec;
         obj.there_s = sec;
+
+        APP.ht_isDst = parseInt(data.currentTime.dst, 2);
 
         deferred.resolve();
     });
@@ -404,42 +428,49 @@ function processSettingsForm() {
     var hereLoc = $('input[id=hereLoc]').val(),
         hereWeather = $('input[id=hereWeather]').val(),
         hereTimeOffset = $('input[id=hereTimeOffset]').val(),
+        hereDst = $('input[id=hereDst]').is(':checked'),
         thereLoc = $('input[id=thereLoc]').val(),
         thereWeather = $('input[id=thereWeather]').val(),
         thereTimeOffset = $('input[id=thereTimeOffset]').val(),
+        thereDst = $('input[id=thereDst]').is(':checked'),
         countdownDate = $('input[id=countdownDate]').val();
 
     // Simple validation
     // countdownDate regex: http://www.mkyong.com/regular-expressions/how-to-validate-date-with-regular-expression/ 
     var dateRegex =
         /(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])\/((20)[1-9]\d)/;
+    var weatherCodeRegex = /[0-9]{5,8}/;
 
     // Update localStorage values if necessary
     if (hereLoc) {
         APP.ht_hereLoc = hereLoc;
         localStorage.ht_hereLoc = hereLoc;
     }
-    if (hereWeather) {
+    if (hereWeather && weatherCodeRegex.test(hereWeather)) {
         APP.ht_hereWeatherCode = hereWeather;
         localStorage.ht_hereWeatherCode = hereWeather;
     }
-    if (hereTimeOffset >= -12 && hereTimeOffset <= 14) {
+    if (hereTimeOffset >= -12 && hereTimeOffset <= 12) {
         APP.ht_hereTimeOffset = hereTimeOffset;
         localStorage.ht_hereTimeOffset = hereTimeOffset;
     }
+    APP.ht_hereDst = hereDst;
+    localStorage.ht_hereDst = hereDst;
 
     if (thereLoc) {
+        APP.ht_thereLoc = thereLoc;
+        localStorage.ht_thereLoc = thereLoc;
+    }
+    if (thereWeather && weatherCodeRegex.test(thereWeather)) {
         APP.ht_thereWeatherCode = thereWeather;
         localStorage.ht_thereWeatherCode = thereWeather;
     }
-    if (thereWeather) {
-        APP.ht_thereWeatherCode = thereWeather;
-        localStorage.ht_thereWeatherCode = thereWeather;
-    }
-    if (thereTimeOffset >= -12 && thereTimeOffset <= 14) {
+    if (thereTimeOffset >= -12 && thereTimeOffset <= 12) {
         APP.ht_thereTimeOffset = thereTimeOffset;
         localStorage.ht_thereTimeOffset = thereTimeOffset;
     }
+    APP.ht_thereDst = thereDst;
+    localStorage.ht_thereDst = thereDst;
 
     if (dateRegex.test(countdownDate) || dateRegex == "") {
         APP.countdownDate = countdownDate;

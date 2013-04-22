@@ -1,7 +1,9 @@
 <?php
     // Default vars
     $hereTimeOffset = ($_GET['here'] != null) ? $_GET['here'] : -8;
+    $hereDst = ($_GET['hereDst'] != null) ? $_GET['hereDst'] : null;
     $thereTimeOffset = ($_GET['there'] != null) ? $_GET['there'] : 7;
+    $thereDst = ($_GET['thereDst'] != null) ? $_GET['thereDst'] : null;
     $futureDateString = ($_GET['date'] != null) ? $_GET['date'] : '05/10/2013';
 
     //http://www.php.net/manual/en/function.getdate.php#87691
@@ -32,8 +34,10 @@
 
     // Here: LA, must account for daylight savings
     $localT = localtime(time(), true);
+    $isDst = $localT['tm_isdst'];
+    $hereDst = ($hereDst == null) ? $isDst : $hereDst;
     $hereDate = null;
-    if ($localT['tm_isdst'] > 0) {
+    if ($hereDst) {
         $hereDate = adjustGmtDate($gmtDate, $hereTimeOffset+1);
     }
     else {
@@ -41,7 +45,14 @@
     }
 
     // There: BKK, no daylight savings
-    $thereDate = adjustGmtDate($gmtDate, $thereTimeOffset);
+    $thereDst = ($thereDst == null) ? false : $thereDst;
+    $thereDate = null;
+    if ($thereDst > 0) {
+        $thereDate = adjustGmtDate($gmtDate, $thereTimeOffset+1);
+    }
+    else {
+        $thereDate = adjustGmtDate($gmtDate, $thereTimeOffset);
+    }
 
     $hereHour = $hereDate['hours'];
     $thereHour = $thereDate['hours'];
@@ -79,7 +90,8 @@ echo <<<EOT
         "there_s": "0",
         "gmt_h": "$gmtDateHour",
         "gmt_m": "$minutes",
-        "gmt_s": "0"
+        "gmt_s": "0",
+        "dst": "$isDst"
     },
     "daysLeft": {
         "remaining": "$daysLeft"
