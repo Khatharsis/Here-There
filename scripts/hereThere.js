@@ -28,7 +28,7 @@ function init() {
         APP.ht_hereLoc = localStorage.ht_hereLoc;
     }
     if (localStorage.ht_hereWeatherCode) {
-        APP.ht_hereWeatherCode = localStorage.ht_hereWeatherCode;
+        APP.ht_hereWeatherCode = parseInt(localStorage.ht_hereWeatherCode, 10);
     }
     if (localStorage.ht_hereTimeOffset) {
         APP.ht_hereTimeOffset = localStorage.ht_hereTimeOffset;
@@ -38,14 +38,15 @@ function init() {
         APP.ht_hereTimeOffset = localStorage.ht_hereTimeOffset;
     }
     if (localStorage.ht_hereDst) {
-        APP.ht_hereDst = localStorage.ht_hereDst;
+        APP.ht_hereDst = (localStorage.ht_hereDst === "true") ? true : false;
     }
 
     if (localStorage.ht_thereLoc) {
         APP.ht_thereLoc = localStorage.ht_thereLoc;
     }
     if (localStorage.ht_thereWeatherCode) {
-        APP.ht_thereWeatherCode = localStorage.ht_thereWeatherCode;
+        APP.ht_thereWeatherCode = parseInt(localStorage.ht_thereWeatherCode,
+        10);
     }
     if (localStorage.ht_thereTimeOffset) {
         APP.ht_thereTimeOffset = localStorage.ht_thereTimeOffset;
@@ -55,7 +56,7 @@ function init() {
         APP.ht_thereTimeOffset = localStorage.ht_thereTimeOffset;
     }
     if (localStorage.ht_thereDst) {
-        APP.ht_thereDst = localStorage.ht_thereDst;
+        APP.ht_thereDst = (localStorage.ht_thereDst === "true") ? true : false;
     }
 
     if (localStorage.ht_countdownDate != null &&
@@ -145,6 +146,9 @@ function displayApp(canvas, ctx, canvasText, ctx2, images) {
             parseInt(APP.ht_hereTimeOffset);
         thereOffset = (thereDst) ? parseInt(APP.ht_thereTimeOffset+1) :
             parseInt(APP.ht_thereTimeOffset);
+
+        // Checkbox - can now be properly checked in default case (LA)
+        $('input#hereDst').prop('checked', hereDst);
 
         // Refresh text canvas every second
         APP.ht_appObj.intervalClock = setInterval(function() {
