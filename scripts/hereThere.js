@@ -141,10 +141,10 @@ function displayApp(canvas, ctx, canvasText, ctx2, images) {
         // There: BKK, does not follow daylight savings
         hereDst = (APP.ht_hereDst == '') ? APP.ht_isDst : APP.ht_hereDst;
         thereDst = (APP.ht_thereDst == '') ? false : APP.ht_thereDst;
-        hereOffset = (hereDst) ? APP.ht_hereTimeOffset+1 :
-            APP.ht_hereTimeOffset;
-        thereOffset = (thereDst) ? APP.ht_thereTimeOffset+1 :
-            APP.ht_thereTimeOffset;
+        hereOffset = (hereDst) ? parseInt(APP.ht_hereTimeOffset+1) :
+            parseInt(APP.ht_hereTimeOffset);
+        thereOffset = (thereDst) ? parseInt(APP.ht_thereTimeOffset+1) :
+            parseInt(APP.ht_thereTimeOffset);
 
         // Refresh text canvas every second
         APP.ht_appObj.intervalClock = setInterval(function() {
@@ -251,7 +251,7 @@ function createUpdatedTimeObj(time, hereOffset, thereOffset) {
 // hour is given in GMT time 
 // offset should be negative if applicable
 function calculateHourOffset(hour, offset) {
-    var tmpHr = hour + offset;
+    var tmpHr = parseInt(hour) + offset;
     if (tmpHr >= 24) {
         tmpHr -= 24;
     }
