@@ -4,7 +4,19 @@
     $hereDst = ($_GET['hereDst'] != null) ? $_GET['hereDst'] : null;
     $thereTimeOffset = ($_GET['there'] != null) ? $_GET['there'] : 7;
     $thereDst = ($_GET['thereDst'] != null) ? $_GET['thereDst'] : null;
-    $futureDateString = ($_GET['date'] != null) ? $_GET['date'] : '05/10/2013';
+    //$futureDateString = ($_GET['date'] != null) ? $_GET['date'] : '05/10/2013';
+
+    // Future Date Array
+    $futureDateArray = array('11/10/2012', '05/10/2013', '11/10/2013', 
+        '05/10/2014', '11/10/2014', '05/10/2015', '11/10/2015', 
+        '05/10/2020');
+    $i = 0;
+    $now = strtotime('now');
+    while ($now > strtotime($futureDateArray[$i])) {
+        $i++;
+    }
+    $futureDateString = ($_GET['date'] != null) ? $_GET['date'] :
+        $futureDateArray[$i];
 
     //http://www.php.net/manual/en/function.getdate.php#87691
     function gmGetDate($timestamp = null) {
