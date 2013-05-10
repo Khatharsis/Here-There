@@ -86,7 +86,10 @@
                 $ret[] = $value . $key;
             }
         }
-        $daysLeft = join(' ', $ret);
+        if (count($ret) > 0)
+            $daysLeft = join(' ', $ret);
+        else
+            $daysLeft = '';
     }
 
 echo <<<EOT
