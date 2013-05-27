@@ -11,7 +11,7 @@ var APP = {
     ht_thereDst: '',
 
     ht_isDst: false,
-    ht_countdownDate: "05/10/2013",
+    ht_countdownDate: '',
 
     ht_appObj: {}
 };
@@ -19,7 +19,8 @@ var APP = {
 // Initialization function - sync globals with localStorage if applicable
 function init() {
     // Event handlers
-    $('#settingsSubmitButton').on('click', processSettingsForm);
+    $('#settingsSubmitButton').off('click')
+        .on('click', processSettingsForm);
     
     // Set up global vars
     // here/thereWeatherCode: must have a value
@@ -63,6 +64,7 @@ function init() {
         localStorage.ht_countdownDate != undefined) {
         APP.ht_countdownDate = localStorage.ht_countdownDate;
     }
+    console.log(APP.ht_countdownDdate);
 
     // Prepopulate the Settings form
     $('input#hereLoc').val(APP.ht_hereLoc);
@@ -78,6 +80,8 @@ function init() {
 
 // Set up the Canvas
 function arrangeCanvas() {
+    init();
+
     // Separate canvases to reduce amount of drawing
     // Background image canvas 
     var canvas = $('#app')[0],
